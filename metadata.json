@@ -1,0 +1,6 @@
+{
+  "name": "Dashboard Quản Lý Dự Án & Nguồn Lực",
+  "description": "Hệ thống Dashboard điều hành quản lý dự án, tiến độ sprint, theo dõi hiệu suất nhân viên và kiểm soát nguồn lực theo thời gian thực.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
