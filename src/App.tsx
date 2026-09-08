@@ -306,7 +306,7 @@ export default function App() {
   return (
     <div
       className={`min-h-screen flex flex-col font-sans transition-colors ${
-        isDark ? 'bg-[#080d1a] text-slate-100' : 'bg-slate-50 text-slate-800'
+        isDark ? 'bg-[#0b0f19] text-slate-100' : 'bg-slate-50 text-slate-800'
       }`}
     >
       {/* 1. Header with Time Filter & Action Tools */}
@@ -332,7 +332,7 @@ export default function App() {
                 <div
                   key={widget.id}
                   className={`p-3.5 rounded-2xl border flex items-center justify-between transition shadow-sm ${
-                    isDark ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200'
+                    isDark ? 'bg-[#131927] border-[#1e293b]' : 'bg-white border-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2">

@@ -269,12 +269,12 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
       }
 
       const ctx = chartStatusRef.current.getContext('2d');
-      let fillGradient: any = isDark ? 'rgba(59, 130, 246, 0.35)' : 'rgba(59, 130, 246, 0.25)';
+      let fillGradient: any = isDark ? 'rgba(59, 130, 246, 0.20)' : 'rgba(59, 130, 246, 0.15)';
       if (ctx) {
         fillGradient = ctx.createRadialGradient(90, 90, 10, 90, 90, 130);
-        fillGradient.addColorStop(0, isDark ? 'rgba(59, 130, 246, 0.65)' : 'rgba(59, 130, 246, 0.45)');
-        fillGradient.addColorStop(0.5, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.2)');
-        fillGradient.addColorStop(1, isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(59, 130, 246, 0.02)');
+        fillGradient.addColorStop(0, isDark ? 'rgba(59, 130, 246, 0.30)' : 'rgba(59, 130, 246, 0.20)');
+        fillGradient.addColorStop(0.5, isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.10)');
+        fillGradient.addColorStop(1, isDark ? 'rgba(59, 130, 246, 0.02)' : 'rgba(59, 130, 246, 0.01)');
       }
 
       const labels = ['Đang làm', 'Hoàn thành', 'Chậm tiến độ', 'Tạm dừng'];
@@ -343,10 +343,10 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
           scales: {
             r: {
               angleLines: {
-                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)',
               },
               grid: {
-                color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)',
               },
               pointLabels: {
                 color: isDark ? '#cbd5e1' : '#475569',
@@ -372,12 +372,12 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
       }
 
       const ctx = chartTypeRef.current.getContext('2d');
-      let fillGradient: any = isDark ? 'rgba(14, 165, 233, 0.35)' : 'rgba(14, 165, 233, 0.25)';
+      let fillGradient: any = isDark ? 'rgba(14, 165, 233, 0.20)' : 'rgba(14, 165, 233, 0.15)';
       if (ctx) {
         fillGradient = ctx.createRadialGradient(90, 90, 10, 90, 90, 130);
-        fillGradient.addColorStop(0, isDark ? 'rgba(14, 165, 233, 0.65)' : 'rgba(14, 165, 233, 0.45)');
-        fillGradient.addColorStop(0.5, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.2)');
-        fillGradient.addColorStop(1, isDark ? 'rgba(14, 165, 233, 0.05)' : 'rgba(14, 165, 233, 0.02)');
+        fillGradient.addColorStop(0, isDark ? 'rgba(14, 165, 233, 0.30)' : 'rgba(14, 165, 233, 0.20)');
+        fillGradient.addColorStop(0.5, isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.10)');
+        fillGradient.addColorStop(1, isDark ? 'rgba(14, 165, 233, 0.02)' : 'rgba(14, 165, 233, 0.01)');
       }
 
       // OLD: const pointRadii = values.map((val) => (val === maxVal && val > 0 ? 5.5 : 3.5));
@@ -442,8 +442,8 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
           },
           scales: {
             r: {
-              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
-              grid: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
+              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)' },
+              grid: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)' },
               pointLabels: {
                 color: isDark ? '#cbd5e1' : '#334155',
                 font: { size: 9.5, weight: 'bold' },
@@ -467,12 +467,12 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
       }
 
       const ctx = chartTaskTypeRef.current.getContext('2d');
-      let fillGradient: any = isDark ? 'rgba(129, 140, 248, 0.35)' : 'rgba(99, 102, 241, 0.25)';
+      let fillGradient: any = isDark ? 'rgba(168, 85, 247, 0.20)' : 'rgba(168, 85, 247, 0.15)';
       if (ctx) {
         fillGradient = ctx.createRadialGradient(90, 90, 10, 90, 90, 130);
-        fillGradient.addColorStop(0, isDark ? 'rgba(129, 140, 248, 0.65)' : 'rgba(99, 102, 241, 0.45)');
-        fillGradient.addColorStop(0.6, isDark ? 'rgba(168, 85, 247, 0.35)' : 'rgba(168, 85, 247, 0.2)');
-        fillGradient.addColorStop(1, isDark ? 'rgba(129, 140, 248, 0.05)' : 'rgba(99, 102, 241, 0.02)');
+        fillGradient.addColorStop(0, isDark ? 'rgba(168, 85, 247, 0.30)' : 'rgba(168, 85, 247, 0.20)');
+        fillGradient.addColorStop(0.6, isDark ? 'rgba(129, 140, 248, 0.15)' : 'rgba(99, 102, 241, 0.10)');
+        fillGradient.addColorStop(1, isDark ? 'rgba(168, 85, 247, 0.02)' : 'rgba(168, 85, 247, 0.01)');
       }
 
       // OLD: const values = Object.values(taskTypeCount || {});
@@ -536,8 +536,8 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
           },
           scales: {
             r: {
-              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
-              grid: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
+              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)' },
+              grid: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)' },
               pointLabels: {
                 color: isDark ? '#e2e8f0' : '#1e293b',
                 font: { size: 9.5, weight: 'bold' },
@@ -561,12 +561,12 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
       }
 
       const ctx = chartTaskStatusRef.current.getContext('2d');
-      let fillGradient: any = isDark ? 'rgba(6, 182, 212, 0.35)' : 'rgba(6, 182, 212, 0.25)';
+      let fillGradient: any = isDark ? 'rgba(56, 189, 248, 0.20)' : 'rgba(56, 189, 248, 0.15)';
       if (ctx) {
         fillGradient = ctx.createRadialGradient(90, 90, 10, 90, 90, 130);
-        fillGradient.addColorStop(0, isDark ? 'rgba(6, 182, 212, 0.65)' : 'rgba(6, 182, 212, 0.45)');
-        fillGradient.addColorStop(0.6, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.2)');
-        fillGradient.addColorStop(1, isDark ? 'rgba(6, 182, 212, 0.05)' : 'rgba(6, 182, 212, 0.02)');
+        fillGradient.addColorStop(0, isDark ? 'rgba(56, 189, 248, 0.30)' : 'rgba(56, 189, 248, 0.20)');
+        fillGradient.addColorStop(0.6, isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.10)');
+        fillGradient.addColorStop(1, isDark ? 'rgba(56, 189, 248, 0.02)' : 'rgba(56, 189, 248, 0.01)');
       }
 
       // OLD: const values = Object.values(taskStatusCount || {});
@@ -630,8 +630,8 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
           },
           scales: {
             r: {
-              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
-              grid: { color: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' },
+              angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)' },
+              grid: { color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)' },
               pointLabels: {
                 color: isDark ? '#cbd5e1' : '#334155',
                 font: { size: 9.5, weight: 'bold' },
