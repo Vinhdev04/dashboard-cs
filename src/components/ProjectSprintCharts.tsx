@@ -240,6 +240,16 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
     };
   }, [selectedSprint, selectedProjectId, taskStatusCount]);
 
+  /** Tính toán trạng thái dự án chiếm tỷ lệ cao nhất */
+  const dominantProjectStatus = React.useMemo(() => {
+    const entries = Object.entries(dynamicProjectStatusCount || {});
+    if (entries.length === 0) return { label: 'Chưa có', count: 0, percent: 0 };
+    const [label, count] = entries.reduce((max, curr) => (curr[1] > max[1] ? curr : max), ['', 0]);
+    const total = entries.reduce((sum, e) => sum + e[1], 0);
+    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+    return { label, count, percent };
+  }, [dynamicProjectStatusCount]);
+
   useEffect(() => {
     // OLD:
     // // 1. Biểu đồ Project theo trạng thái (Donut 360)
@@ -252,75 +262,99 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
     //   });
     // }
 
-    /** 1. Biểu đồ Trạng Thái Dự Án (Custom 360° Neon Doughnut Ring High-End) */
+    /** 1. Biểu đồ Trạng Thái Dự Án (Radar Chart Mạng Nhện Micro Tooltip & Sleek Point Marker) */
     if (chartStatusRef.current) {
       if (chartInstances.current['status']) {
         chartInstances.current['status']?.destroy();
       }
 
       const ctx = chartStatusRef.current.getContext('2d');
-      let gBlue: any = '#3b82f6';
-      let gGreen: any = '#10b981';
-      let gAmber: any = '#f59e0b';
-      let gRose: any = '#ef4444';
-
+      let fillGradient: any = isDark ? 'rgba(59, 130, 246, 0.35)' : 'rgba(59, 130, 246, 0.25)';
       if (ctx) {
-        gBlue = ctx.createLinearGradient(0, 0, 0, 160);
-        gBlue.addColorStop(0, '#60a5fa');
-        gBlue.addColorStop(1, '#1d4ed8');
-
-        gGreen = ctx.createLinearGradient(0, 0, 0, 160);
-        gGreen.addColorStop(0, '#34d399');
-        gGreen.addColorStop(1, '#047857');
-
-        gAmber = ctx.createLinearGradient(0, 0, 0, 160);
-        gAmber.addColorStop(0, '#fbbf24');
-        gAmber.addColorStop(1, '#b45309');
-
-        gRose = ctx.createLinearGradient(0, 0, 0, 160);
-        gRose.addColorStop(0, '#f87171');
-        gRose.addColorStop(1, '#b91c1c');
+        fillGradient = ctx.createRadialGradient(90, 90, 10, 90, 90, 130);
+        fillGradient.addColorStop(0, isDark ? 'rgba(59, 130, 246, 0.65)' : 'rgba(59, 130, 246, 0.45)');
+        fillGradient.addColorStop(0.5, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.2)');
+        fillGradient.addColorStop(1, isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(59, 130, 246, 0.02)');
       }
 
-      const statusKeys = ['Đang thực hiện', 'Hoàn thành', 'Chậm tiến độ', 'Tạm dừng'];
-      const statusData = statusKeys.map((k) => dynamicProjectStatusCount[k] || 0);
-      const statusColors = [gBlue, gGreen, gAmber, gRose];
+      const labels = ['Đang làm', 'Hoàn thành', 'Chậm tiến độ', 'Tạm dừng'];
+      const values = [
+        dynamicProjectStatusCount['Đang thực hiện'] || 0,
+        dynamicProjectStatusCount['Hoàn thành'] || 0,
+        dynamicProjectStatusCount['Chậm tiến độ'] || 0,
+        dynamicProjectStatusCount['Tạm dừng'] || 0,
+      ];
+      const maxVal = Math.max(...values);
+      const pointRadii = values.map((val) => (val === maxVal && val > 0 ? 3.5 : 2.0));
+      const pointColors = values.map((val) => (val === maxVal && val > 0 ? '#f97316' : '#3b82f6'));
+      const pointHoverRadii = values.map((val) => (val === maxVal && val > 0 ? 4.5 : 3.5));
 
       chartInstances.current['status'] = new Chart(chartStatusRef.current, {
-        type: 'doughnut',
+        type: 'radar',
         data: {
-          labels: statusKeys,
+          labels: labels,
           datasets: [
             {
-              data: statusData,
-              backgroundColor: statusColors,
-              borderWidth: 2,
-              borderColor: isDark ? '#0f172a' : '#ffffff',
-              hoverOffset: 6,
+              label: 'Số dự án',
+              data: values,
+              backgroundColor: fillGradient,
+              borderColor: '#3b82f6',
+              borderWidth: 2.2,
+              pointBackgroundColor: pointColors,
+              pointBorderColor: '#ffffff',
+              pointHoverBackgroundColor: '#ffffff',
+              pointHoverBorderColor: '#f97316',
+              pointRadius: pointRadii,
+              pointHoverRadius: pointHoverRadii,
+              pointBorderWidth: 1.5,
             },
           ],
         },
         options: {
+          interaction: {
+            mode: 'nearest',
+            intersect: true,
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true,
+          },
           animation: {
-            animateRotate: true,
-            animateScale: true,
             duration: 600,
             easing: 'easeOutQuart',
           },
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '74%',
           plugins: {
             legend: { display: false },
             tooltip: {
-              padding: { top: 6, bottom: 6, left: 10, right: 10 },
+              padding: { top: 4, bottom: 4, left: 8, right: 8 },
               caretSize: 4,
-              displayColors: true,
-              titleFont: { size: 11, weight: 'bold' },
-              bodyFont: { size: 11, weight: 'bold' },
+              caretPadding: 6,
+              displayColors: false,
+              titleFont: { size: 10, weight: 'bold' },
+              bodyFont: { size: 10, weight: 'bold' },
               callbacks: {
-                label: (ctx) => ` ${ctx.label}: ${ctx.raw} dự án`,
+                title: () => '',
+                label: (ctx) => `${ctx.label}: ${ctx.raw} dự án`,
               },
+            },
+          },
+          scales: {
+            r: {
+              angleLines: {
+                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+              },
+              grid: {
+                color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+              },
+              pointLabels: {
+                color: isDark ? '#cbd5e1' : '#475569',
+                font: { size: 9.5, weight: 'bold' },
+                padding: 4,
+              },
+              ticks: { display: false },
+              suggestedMin: 0,
             },
           },
         },
@@ -950,64 +984,23 @@ export const ProjectSprintCharts: React.FC<ProjectSprintChartsProps> = ({
               </h3>
             </div>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${isDark ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-              {filteredProjects.length} Dự án
+              Biểu đồ Radar
             </span>
           </div>
 
-          <div className="h-44 relative my-2 flex items-center justify-center">
+          <div className="h-48 relative my-1">
             <canvas ref={chartStatusRef} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {filteredProjects.length}
-              </span>
-              <span className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                DỰ ÁN
-              </span>
-            </div>
           </div>
 
-          {/* Render khối Legend mô tả động 100% từ dữ liệu thực tế dynamicProjectStatusCount */}
-          {(() => {
-            const total = filteredProjects.length || 1;
-            const inProgress = dynamicProjectStatusCount['Đang thực hiện'] || 0;
-            const completed = dynamicProjectStatusCount['Hoàn thành'] || 0;
-            const delayed = dynamicProjectStatusCount['Chậm tiến độ'] || 0;
-            const paused = dynamicProjectStatusCount['Tạm dừng'] || 0;
-
-            const inProgressPct = Math.round((inProgress / total) * 100);
-            const completedPct = Math.round((completed / total) * 100);
-            const delayedPct = Math.round((delayed / total) * 100);
-            const pausedPct = Math.round((paused / total) * 100);
-
-            return (
-              <div className={`grid grid-cols-2 gap-1.5 pt-2.5 border-t text-[10.5px] ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}>
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                  <span className={`truncate ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    Đang làm: <strong className={isDark ? 'text-white' : 'text-slate-900'}>{inProgress} ({inProgressPct}%)</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className={`truncate ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    Xong: <strong className={isDark ? 'text-white' : 'text-slate-900'}>{completed} ({completedPct}%)</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                  <span className={`truncate ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    Chậm: <strong className={isDark ? 'text-white' : 'text-slate-900'}>{delayed} ({delayedPct}%)</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className={`truncate ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    Dừng: <strong className={isDark ? 'text-white' : 'text-slate-900'}>{paused} ({pausedPct}%)</strong>
-                  </span>
-                </div>
-              </div>
-            );
-          })()}
+          <div className={`pt-2.5 border-t text-[10.5px] flex items-center justify-between gap-1 ${isDark ? 'border-slate-800/80 text-slate-400' : 'border-slate-200 text-slate-600'}`}>
+            <span className="truncate flex items-center gap-1 min-w-0">
+              <span className="text-blue-400 font-bold shrink-0">🔥 Đa số:</span>
+              <span className={`truncate font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{dominantProjectStatus.label}</span>
+            </span>
+            <span className={`font-bold font-mono shrink-0 ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
+              {dominantProjectStatus.count} prj ({dominantProjectStatus.percent}%)
+            </span>
+          </div>
         </div>
 
         {/* Card 2: Biểu đồ Project theo loại dự án */}
