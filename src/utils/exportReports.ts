@@ -1,4 +1,4 @@
-import { Sprint, Project, Task, CompanyKPIConfig } from '../types';
+import { Sprint, Project, Task, CompanyKPIConfig, Employee } from '../types';
 import { DEFAULT_KPI_CONFIG } from '../data/mockData';
 
 /**
@@ -796,3 +796,430 @@ export function downloadProjectCSV(
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Generates an Excel Spreadsheet HTML for Comprehensive Member Performance & Quality Report
+ */
+export function generateMemberExcelHtml(
+  employees: Employee[],
+  tasks: Task[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): string {
+  const activeConfig = kpiConfig && typeof kpiConfig === 'object' && kpiConfig.year ? kpiConfig : DEFAULT_KPI_CONFIG;
+  const targetOverdue = activeConfig.maxOverdueRate ?? 5.0;
+  const targetBug = activeConfig.maxBugRate ?? 8.0;
+  const targetRework = activeConfig.maxReworkRate ?? 5.0;
+
+  const totalEmployees = employees.length;
+  const totalTasks = employees.reduce((sum, e) => sum + (e.totalTasks || 0), 0);
+  const totalHours = employees.reduce((sum, e) => sum + (e.totalHours || 0), 0);
+  const avgOverdue = totalEmployees > 0 ? (employees.reduce((sum, e) => sum + e.overdueRate, 0) / totalEmployees).toFixed(1) : '0';
+  const avgBug = totalEmployees > 0 ? (employees.reduce((sum, e) => sum + e.bugRate, 0) / totalEmployees).toFixed(1) : '0';
+  const avgRework = totalEmployees > 0 ? (employees.reduce((sum, e) => sum + e.reworkRate, 0) / totalEmployees).toFixed(1) : '0';
+
+  return `
+  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 11pt; color: #1e293b; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+      th { background-color: #1e3a8a; color: #ffffff; font-weight: bold; border: 1px solid #94a3b8; padding: 8px 10px; text-align: left; }
+      td { border: 1px solid #cbd5e1; padding: 6px 10px; mso-number-format:'\\@'; }
+      .num { text-align: right; mso-number-format:'#,##0'; }
+      .text-center { text-align: center; }
+      .section-banner { background-color: #0284c7; color: #ffffff; font-weight: bold; font-size: 12pt; padding: 10px; }
+      .title-banner { background-color: #0f172a; color: #ffffff; font-size: 15pt; font-weight: bold; text-align: center; padding: 14px; }
+      .badge-ok { background-color: #dcfce7; color: #15803d; font-weight: bold; }
+      .badge-fail { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
+      .badge-warn { background-color: #fef3c7; color: #b45309; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td colspan="12" class="title-banner">BÁO CÁO TOÀN DIỆN HIỆU SUẤT & CHẤT LƯỢNG THÀNH VIÊN (MEMBER PERFORMANCE REPORT)</td>
+      </tr>
+      <tr>
+        <td colspan="12" style="background-color: #f1f5f9; text-align: right; font-style: italic;">Thời điểm xuất báo cáo: ${new Date().toLocaleString('vi-VN')} | Áp dụng cấu hình KPI năm: ${activeConfig.year || 2026}</td>
+      </tr>
+    </table>
+
+    <!-- PHẦN 1: TỔNG HỢP CHỈ SỐ NHÂN SỰ TOÀN HỆ THỐNG -->
+    <table>
+      <tr><td colspan="4" class="section-banner">[PHẦN 1: TỔNG QUAN CHỈ SỐ NHÂN SỰ & CHẤT LƯỢNG TOÀN DOANH NGHIỆP]</td></tr>
+      <tr>
+        <td style="font-weight:bold; width:250px; background:#f8fafc;">Tổng Số Lực Lượng Nhân Sự:</td>
+        <td><strong>${totalEmployees} Thành viên</strong> (100% Đang Hoạt Động)</td>
+        <td style="font-weight:bold; width:250px; background:#f8fafc;">Tổng Khối Lượng Task Đã Giao:</td>
+        <td><strong>${totalTasks} Tasks</strong> (${totalHours} Giờ Công Tích Lũy)</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Trễ Hạn Trung Bình:</td>
+        <td class="${Number(avgOverdue) <= targetOverdue ? 'badge-ok' : 'badge-fail'}">${avgOverdue}% (Mục tiêu công ty: &le; ${targetOverdue}%)</td>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Bug Phát Sinh Trung Bình:</td>
+        <td class="${Number(avgBug) <= targetBug ? 'badge-ok' : 'badge-fail'}">${avgBug}% (Mục tiêu công ty: &le; ${targetBug}%)</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Rework Trung Bình:</td>
+        <td class="${Number(avgRework) <= targetRework ? 'badge-ok' : 'badge-fail'}">${avgRework}% (Mục tiêu công ty: &le; ${targetRework}%)</td>
+        <td style="font-weight:bold; background:#f8fafc;">Quy Chuẩn Định Mức Giờ / Ngày:</td>
+        <td>8.0h / ngày (Tải trọng an toàn có ít nhất 1.5h đệm)</td>
+      </tr>
+    </table>
+
+    <!-- PHẦN 2: BẢNG CHI TIẾT HIỆU SUẤT TỪNG THÀNH VIÊN -->
+    <table>
+      <tr><td colspan="12" class="section-banner">[PHẦN 2: DANH SÁCH CHI TIẾT THÀNH VIÊN & ĐỐI CHIẾU MỤC TIÊU KPI]</td></tr>
+      <tr style="background:#f1f5f9;">
+        <th class="text-center">STT</th>
+        <th>Mã NV</th>
+        <th>Họ và Tên</th>
+        <th>Chức Danh & Vị Trí</th>
+        <th>Phòng Ban</th>
+        <th class="num">Tổng Task</th>
+        <th class="num">Tổng Giờ (h)</th>
+        <th class="num">Tải Trọng Hôm Nay</th>
+        <th class="text-center">Trễ Hạn (&le; ${targetOverdue}%)</th>
+        <th class="text-center">Bug (&le; ${targetBug}%)</th>
+        <th class="text-center">Rework (&le; ${targetRework}%)</th>
+        <th class="text-center">Đánh Giá Năng Suất</th>
+      </tr>
+      ${employees
+        .map((emp, idx) => {
+          const isOverdueExceeded = emp.overdueRate > targetOverdue;
+          const isBugExceeded = emp.bugRate > targetBug;
+          const isReworkExceeded = emp.reworkRate > targetRework;
+          const workloadStatus = emp.allocatedHoursToday >= 7.5 ? 'Quá tải' : emp.allocatedHoursToday >= 6.0 ? 'Cân bằng' : 'Còn trống';
+          const rating = emp.performanceRating || (emp.overdueRate <= 3 && emp.reworkRate <= 3 ? 'Xuất Sắc' : emp.overdueRate <= 5 ? 'Tốt' : 'Cần Cải Thiện');
+
+          return `
+          <tr>
+            <td class="text-center">${idx + 1}</td>
+            <td style="font-family:monospace; font-weight:bold;">${emp.code}</td>
+            <td><strong>${emp.name}</strong></td>
+            <td>${emp.role}</td>
+            <td>${emp.department}</td>
+            <td class="num">${emp.totalTasks}</td>
+            <td class="num">${emp.totalHours}h</td>
+            <td class="num">${emp.allocatedHoursToday}h / 8h (${workloadStatus})</td>
+            <td class="text-center ${isOverdueExceeded ? 'badge-fail' : 'badge-ok'}">${emp.overdueRate}% ${isOverdueExceeded ? '⚠️ Vượt' : '✓ Đạt'}</td>
+            <td class="text-center ${isBugExceeded ? 'badge-fail' : 'badge-ok'}">${emp.bugRate}% ${isBugExceeded ? '⚠️ Vượt' : '✓ Đạt'}</td>
+            <td class="text-center ${isReworkExceeded ? 'badge-fail' : 'badge-ok'}">${emp.reworkRate}% ${isReworkExceeded ? '⚠️ Vượt' : '✓ Đạt'}</td>
+            <td class="text-center"><strong>${rating}</strong></td>
+          </tr>
+        `;
+        })
+        .join('')}
+    </table>
+
+    <!-- PHẦN 3: DANH SÁCH TOÀN BỘ CÔNG VIỆC PHÂN BỔ CHO CÁC THÀNH VIÊN -->
+    <table>
+      <tr><td colspan="8" class="section-banner">[PHẦN 3: DANH SÁCH CHI TIẾT CÁC TASK CÔNG VIỆC ĐƯỢC PHÂN CÔNG]</td></tr>
+      <tr style="background:#f1f5f9;">
+        <th class="text-center">STT</th>
+        <th>Mã Task</th>
+        <th>Tên Công Việc</th>
+        <th>Người Phụ Trách</th>
+        <th>Dự Án</th>
+        <th class="text-center">Loại Task</th>
+        <th class="num">Giờ Est (h)</th>
+        <th class="text-center">Trạng Thái</th>
+      </tr>
+      ${tasks.slice(0, 100).map((t, idx) => `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td style="font-family:monospace; font-weight:bold;">${t.code}</td>
+          <td>${t.title}</td>
+          <td><strong>${t.assigneeName}</strong></td>
+          <td>${t.projectName}</td>
+          <td class="text-center">${t.type.toUpperCase()}</td>
+          <td class="num">${t.estimatedHours}h</td>
+          <td class="text-center ${t.status === 'done' ? 'badge-ok' : t.isOverdueToday ? 'badge-fail' : 'badge-warn'}">${t.status === 'done' ? 'Đã Xong' : t.isOverdueToday ? 'Trễ Hạn' : 'Đang Làm'}</td>
+        </tr>
+      `).join('')}
+    </table>
+  </body>
+  </html>
+  `;
+}
+
+/**
+ * Downloads a professionally formatted Excel spreadsheet (.xls) for Member Report
+ */
+export function downloadMemberExcel(
+  employees: Employee[],
+  tasks: Task[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): void {
+  const htmlContent = generateMemberExcelHtml(employees, tasks, kpiConfig);
+  const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Bao_Cao_Member_Toan_Doi_Ngu_${new Date().toISOString().slice(0, 10)}.xls`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Generates a clean CSV for Member Report
+ */
+export function generateMemberCSV(
+  employees: Employee[],
+  tasks: Task[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): string {
+  const activeConfig = kpiConfig && typeof kpiConfig === 'object' && kpiConfig.year ? kpiConfig : DEFAULT_KPI_CONFIG;
+  const lines: string[] = [];
+
+  lines.push(`BÁO CÁO HIỆU SUẤT & CHẤT LƯỢNG THÀNH VIÊN`);
+  lines.push(`Thời điểm trích xuất:,${cleanCSV(new Date().toLocaleString('vi-VN'))}`);
+  lines.push(`Áp dụng hạn mức KPI năm:,${activeConfig.year || 2026}`);
+  lines.push(``);
+
+  lines.push(`STT,Mã NV,Họ Tên,Chức Danh,Phòng Ban,Tổng Task,Tổng Giờ (h),Tải Trọng Hôm Nay (h),Tỷ Lệ Trễ (%),Mục Tiêu Trễ (%),Tỷ Lệ Bug (%),Mục Tiêu Bug (%),Tỷ Lệ Rework (%),Mục Tiêu Rework (%),Đánh Giá Năng Suất`);
+  employees.forEach((emp, idx) => {
+    lines.push(
+      `${idx + 1},${cleanCSV(emp.code)},${cleanCSV(emp.name)},${cleanCSV(emp.role)},${cleanCSV(emp.department)},${emp.totalTasks},${emp.totalHours},${emp.allocatedHoursToday},${emp.overdueRate}%,${emp.targetOverdueRate}%,${emp.bugRate}%,${emp.targetBugRate}%,${emp.reworkRate}%,${emp.targetReworkRate}%,${cleanCSV(emp.performanceRating || 'Tốt')}`
+    );
+  });
+
+  return '\uFEFF' + lines.join('\r\n');
+}
+
+/**
+ * Downloads a clean Member CSV
+ */
+export function downloadMemberCSV(
+  employees: Employee[],
+  tasks: Task[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): void {
+  const csvContent = generateMemberCSV(employees, tasks, kpiConfig);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Bao_Cao_Member_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Generates an Excel Spreadsheet HTML specifically for an Individual Member Report
+ */
+export function generateIndividualMemberExcelHtml(
+  employee: Employee,
+  memberTasks: Task[] = [],
+  projects: { id: string; name: string; code: string; progress: number; client?: string }[] = [],
+  sprints: { id: string; name: string; projectName: string; status: string; progress: number }[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): string {
+  const activeConfig = kpiConfig && typeof kpiConfig === 'object' && kpiConfig.year ? kpiConfig : DEFAULT_KPI_CONFIG;
+  const targetOverdue = activeConfig.maxOverdueRate ?? 5.0;
+  const targetBug = activeConfig.maxBugRate ?? 8.0;
+  const targetRework = activeConfig.maxReworkRate ?? 5.0;
+
+  const totalTasks = memberTasks.length;
+  const completedTasks = memberTasks.filter((t) => t.status === 'done').length;
+  const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : '0';
+  const totalEstHours = memberTasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
+  const totalActHours = memberTasks.reduce((sum, t) => sum + (t.actualHours || 0), 0);
+
+  const isOverdueExceeded = employee.overdueRate > targetOverdue;
+  const isBugExceeded = employee.bugRate > targetBug;
+  const isReworkExceeded = employee.reworkRate > targetRework;
+
+  return `
+  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 11pt; color: #1e293b; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+      th { background-color: #1e3a8a; color: #ffffff; font-weight: bold; border: 1px solid #94a3b8; padding: 8px 10px; text-align: left; }
+      td { border: 1px solid #cbd5e1; padding: 6px 10px; mso-number-format:'\\@'; }
+      .num { text-align: right; mso-number-format:'#,##0.0'; }
+      .text-center { text-align: center; }
+      .section-banner { background-color: #0284c7; color: #ffffff; font-weight: bold; font-size: 12pt; padding: 10px; }
+      .title-banner { background-color: #0f172a; color: #ffffff; font-size: 16pt; font-weight: bold; text-align: center; padding: 14px; }
+      .badge-ok { background-color: #dcfce7; color: #15803d; font-weight: bold; }
+      .badge-fail { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
+      .badge-warn { background-color: #fef3c7; color: #b45309; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td colspan="10" class="title-banner">BÁO CÁO CÁ NHÂN THÀNH VIÊN (INDIVIDUAL MEMBER PERFORMANCE & TASK REPORT)</td>
+      </tr>
+      <tr>
+        <td colspan="10" style="background-color: #f1f5f9; text-align: right; font-style: italic;">Thời điểm xuất báo cáo: ${new Date().toLocaleString('vi-VN')} | Áp dụng khung KPI: ${activeConfig.year || 2026}</td>
+      </tr>
+    </table>
+
+    <!-- PHẦN 1: HỒ SƠ THÀNH VIÊN -->
+    <table>
+      <tr><td colspan="4" class="section-banner">[PHẦN 1: HỒ SƠ NHÂN SỰ & THÔNG TIN CÔNG TÁC]</td></tr>
+      <tr>
+        <td style="font-weight:bold; width:220px; background:#f8fafc;">Họ và Tên:</td>
+        <td><strong>${employee.name}</strong></td>
+        <td style="font-weight:bold; width:220px; background:#f8fafc;">Mã Nhân Viên:</td>
+        <td style="font-family:monospace; font-weight:bold;">${employee.code}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Chức Danh & Vị Trí:</td>
+        <td>${employee.role}</td>
+        <td style="font-weight:bold; background:#f8fafc;">Phòng Ban Quản Lý:</td>
+        <td>${employee.department}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Email:</td>
+        <td>${employee.email || 'Chưa cập nhật'}</td>
+        <td style="font-weight:bold; background:#f8fafc;">Số Điện Thoại:</td>
+        <td>${employee.phone || 'Chưa cập nhật'}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tải Trọng Hôm Nay:</td>
+        <td><strong>${employee.allocatedHoursToday}h / 8.0h</strong> (${employee.remainingHoursToday}h đệm an toàn)</td>
+        <td style="font-weight:bold; background:#f8fafc;">Xếp Loại Năng Suất:</td>
+        <td><strong>${employee.performanceRating || 'Tốt'}</strong> (KPI Grade: ${employee.kpiGrade || 'A'})</td>
+      </tr>
+    </table>
+
+    <!-- PHẦN 2: CHỈ SỐ KPI CHẤT LƯỢNG & NĂNG SUẤT -->
+    <table>
+      <tr><td colspan="4" class="section-banner">[PHẦN 2: TỔNG HỢP CHỈ SỐ KPI & ĐỐI CHIẾU MỤC TIÊU CÔNG TY]</td></tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tổng Số Task:</td>
+        <td>${totalTasks} Tasks (${completedTasks} Đã xong - ${completionRate}%)</td>
+        <td style="font-weight:bold; background:#f8fafc;">Tổng Giờ Ước Tính vs Thực Tế:</td>
+        <td>${totalEstHours}h Est / ${totalActHours}h Actual</td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Trễ Hạn:</td>
+        <td class="${isOverdueExceeded ? 'badge-fail' : 'badge-ok'}">
+          ${employee.overdueRate}% (Mục tiêu: &le; ${targetOverdue}% | ${isOverdueExceeded ? '⚠️ VƯỢT HẠN MỨC' : '✓ ĐẠT CHUẨN'})
+        </td>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Bug:</td>
+        <td class="${isBugExceeded ? 'badge-fail' : 'badge-ok'}">
+          ${employee.bugRate}% (Mục tiêu: &le; ${targetBug}% | ${isBugExceeded ? '⚠️ VƯỢT HẠN MỨC' : '✓ ĐẠT CHUẨN'})
+        </td>
+      </tr>
+      <tr>
+        <td style="font-weight:bold; background:#f8fafc;">Tỷ Lệ Rework:</td>
+        <td class="${isReworkExceeded ? 'badge-fail' : 'badge-ok'}">
+          ${employee.reworkRate}% (Mục tiêu: &le; ${targetRework}% | ${isReworkExceeded ? '⚠️ VƯỢT HẠN MỨC' : '✓ ĐẠT CHUẨN'})
+        </td>
+        <td style="font-weight:bold; background:#f8fafc;">Số Dự Án & Sprint Đang Tham Gia:</td>
+        <td><strong>${projects.length} Dự Án</strong> / <strong>${sprints.length} Sprint</strong></td>
+      </tr>
+    </table>
+
+    <!-- PHẦN 3: DANH SÁCH DỰ ÁN & SPRINT THAM GIA -->
+    <table>
+      <tr><td colspan="5" class="section-banner">[PHẦN 3: CÁC DỰ ÁN THÀNH VIÊN ĐANG THAM GIA ĐÓNG GÓP]</td></tr>
+      <tr style="background:#f1f5f9;">
+        <th class="text-center" style="width:50px;">STT</th>
+        <th>Mã Dự Án</th>
+        <th>Tên Dự Án</th>
+        <th>Khách Hàng</th>
+        <th class="text-center">Tiến Độ Dự Án</th>
+      </tr>
+      ${projects.length > 0 ? projects.map((p, idx) => `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td style="font-family:monospace; font-weight:bold;">${p.code}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.client || 'Khách hàng trọng điểm'}</td>
+          <td class="text-center font-bold">${p.progress}%</td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" class="text-center">Chưa có dự án nào được gán</td></tr>'}
+    </table>
+
+    <!-- PHẦN 4: DANH SÁCH SPRINT LIÊN QUAN -->
+    <table>
+      <tr><td colspan="5" class="section-banner">[PHẦN 4: CÁC SPRINT THÀNH VIÊN THAM GIA ĐỢT NÀY]</td></tr>
+      <tr style="background:#f1f5f9;">
+        <th class="text-center" style="width:50px;">STT</th>
+        <th>Tên Sprint</th>
+        <th>Thuộc Dự Án</th>
+        <th class="text-center">Trạng Thái</th>
+        <th class="text-center">Tiến Độ Sprint</th>
+      </tr>
+      ${sprints.length > 0 ? sprints.map((s, idx) => `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td><strong>${s.name}</strong></td>
+          <td>${s.projectName}</td>
+          <td class="text-center">${s.status === 'in_progress' ? 'Đang thực hiện' : s.status === 'completed' ? 'Hoàn thành' : 'Kế hoạch'}</td>
+          <td class="text-center font-bold">${s.progress}%</td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" class="text-center">Chưa có Sprint nào</td></tr>'}
+    </table>
+
+    <!-- PHẦN 5: CHI TIẾT TẤT CẢ CÁC TASK CỦA THÀNH VIÊN -->
+    <table>
+      <tr><td colspan="10" class="section-banner">[PHẦN 5: CHI TIẾT TẤT CẢ CÁC TASK CÔNG VIỆC CỦA THÀNH VIÊN]</td></tr>
+      <tr style="background:#f1f5f9;">
+        <th class="text-center" style="width:40px;">STT</th>
+        <th>Mã Task</th>
+        <th>Tiêu Đề Công Việc</th>
+        <th>Dự Án</th>
+        <th>Sprint</th>
+        <th class="text-center">Loại</th>
+        <th class="text-center">Độ Ưu Tiên</th>
+        <th class="num">Est (h)</th>
+        <th class="num">Act (h)</th>
+        <th class="text-center">Trạng Thái</th>
+      </tr>
+      ${memberTasks.length > 0 ? memberTasks.map((t, idx) => `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td style="font-family:monospace; font-weight:bold;">${t.code}</td>
+          <td>${t.title}</td>
+          <td>${t.projectName}</td>
+          <td>${t.sprintName || 'Sprint hiện tại'}</td>
+          <td class="text-center"><strong>${t.type.toUpperCase()}</strong></td>
+          <td class="text-center">${t.priority ? t.priority.toUpperCase() : 'MEDIUM'}</td>
+          <td class="num">${t.estimatedHours || 0}</td>
+          <td class="num">${t.actualHours || 0}</td>
+          <td class="text-center ${t.status === 'done' ? 'badge-ok' : t.isOverdueToday ? 'badge-fail' : 'badge-warn'}">
+            ${t.status === 'done' ? 'Hoàn thành' : t.isOverdueToday ? 'Trễ hạn' : 'Đang làm'}
+          </td>
+        </tr>
+      `).join('') : '<tr><td colspan="10" class="text-center">Chưa có task nào được ghi nhận</td></tr>'}
+    </table>
+  </body>
+  </html>
+  `;
+}
+
+/**
+ * Downloads a formatted Excel spreadsheet for an Individual Member Report
+ */
+export function downloadIndividualMemberExcel(
+  employee: Employee,
+  memberTasks: Task[] = [],
+  projects: { id: string; name: string; code: string; progress: number; client?: string }[] = [],
+  sprints: { id: string; name: string; projectName: string; status: string; progress: number }[] = [],
+  kpiConfig: CompanyKPIConfig = DEFAULT_KPI_CONFIG
+): void {
+  const htmlContent = generateIndividualMemberExcelHtml(employee, memberTasks, projects, sprints, kpiConfig);
+  const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  const cleanName = employee.name.replace(/[^a-zA-Z0-9]/g, '_');
+  link.setAttribute('download', `Bao_Cao_Ca_Nhan_${employee.code}_${cleanName}_${new Date().toISOString().slice(0, 10)}.xls`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+

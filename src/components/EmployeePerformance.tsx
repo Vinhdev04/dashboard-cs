@@ -22,6 +22,7 @@ interface EmployeePerformanceProps {
   topLowestHours: Employee[];
   allEmployees: Employee[];
   onSelectEmployee: (emp: Employee) => void;
+  onOpenMemberReportScreen?: () => void;
   isDark?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const EmployeePerformance: React.FC<EmployeePerformanceProps> = ({
   topLowestHours = [],
   allEmployees = [],
   onSelectEmployee,
+  onOpenMemberReportScreen,
   isDark = true,
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -51,18 +53,31 @@ export const EmployeePerformance: React.FC<EmployeePerformanceProps> = ({
 
   return (
     <section id="section-employee" className="space-y-5">
-      <div>
-        <h2
-          className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${
-            isDark ? 'text-blue-300' : 'text-slate-900'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          MỤC 4: HIỆU SUẤT & CHỈ SỐ CHẤT LƯỢNG NHÂN VIÊN
-        </h2>
-        <p className="text-xs text-slate-400 font-medium">
-          Vinh danh Top 3 cao nhất, nhận diện Top 3 thấp nhất và bảng so sánh chi tiết tỷ lệ Trễ, Bug, Rework so với mục tiêu
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2
+            className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${
+              isDark ? 'text-blue-300' : 'text-slate-900'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            MỤC 4: HIỆU SUẤT & CHỈ SỐ CHẤT LƯỢNG NHÂN VIÊN
+          </h2>
+          <p className="text-xs text-slate-400 font-medium">
+            Vinh danh Top 3 cao nhất, nhận diện Top 3 thấp nhất và bảng so sánh chi tiết tỷ lệ Trễ, Bug, Rework so với mục tiêu
+          </p>
+        </div>
+
+        {onOpenMemberReportScreen && (
+          <button
+            onClick={onOpenMemberReportScreen}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 transition"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Mở Màn Hình Báo Cáo Member Toàn Diện</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* TOP 3 CAO NHẤT VÀ TOP 3 THẤP NHẤT GRID */}

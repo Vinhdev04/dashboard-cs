@@ -1,5 +1,7 @@
 export type TimePeriod = 'today' | 'week' | 'month' | 'year';
 
+export type ActiveNavTab = 'dashboard' | 'today' | 'team' | 'reports' | 'member';
+
 export type ComparisonTrend = 'up' | 'down' | 'equal';
 
 // OLD: export type ProjectType = 'maintenance' | 'new';
@@ -298,5 +300,38 @@ export interface WidgetConfig {
   enabled: boolean;
   collapsed: boolean;
   order: number;
+}
+
+export interface DailyReportTaskItem {
+  taskId?: string;
+  taskCode: string;
+  taskTitle: string;
+  projectName?: string;
+  hoursSpent: number;
+  progressPercent: number;
+  status: 'done' | 'in_progress' | 'blocked';
+  notes?: string;
+}
+
+export interface DailyWorkReport {
+  id: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  employeeAvatar?: string;
+  department: string;
+  date: string; // YYYY-MM-DD
+  submittedAt: string;
+  hoursLogged: number;
+  completedSummary: string;
+  inProgressSummary: string;
+  blockers?: string;
+  tomorrowPlan?: string;
+  completionRateScore?: number; // 0-100%
+  status: 'submitted' | 'reviewed' | 'needs_clarification';
+  managerFeedback?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  tasks: DailyReportTaskItem[];
 }
 
